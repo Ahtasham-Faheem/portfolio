@@ -4,16 +4,31 @@ import { motion } from 'framer-motion';
 import { useRef, useEffect, useState } from 'react';
 import Head from 'next/head';
 import * as THREE from 'three';
-import Circle from "../public/circle.png"
+import Link from 'next/link';
+import { database } from './lib/firebase';
+import { ref, onValue } from 'firebase/database';
 
 const Portfolio = () => {
+  // Refs for sections
   const homeRef = useRef(null);
   const aboutRef = useRef(null);
   const workRef = useRef(null);
+  const experienceRef = useRef(null);
   const contactRef = useRef(null);
   const canvasRef = useRef(null);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
+  // State
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    subject: '',
+    message: ''
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitMessage, setSubmitMessage] = useState('');
+
+  // Scroll function
   const scrollToSection = (ref) => {
     if (ref.current) {
       const headerHeight = 80;
@@ -24,47 +39,94 @@ const Portfolio = () => {
         top: offsetPosition,
         behavior: 'smooth'
       });
-
-      // Delay closing the mobile menu until after scroll starts
-      setTimeout(() => {
-        setIsMenuOpen(false);
-      }, 500); // 0.5s delay
     }
+    setIsMenuOpen(false);
   };
 
-  // Animation variants
-  const container = {
-    hidden: { opacity: 0 },
-    show: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.15,
-        delayChildren: 0.3
+  // Handle form input changes
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  // Handle form submission
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    try {
+      // Replace with your actual form submission logic
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (response.ok) {
+        setSubmitMessage('Message sent successfully!');
+        setFormData({
+          name: '',
+          email: '',
+          subject: '',
+          message: ''
+        });
+      } else {
+        setSubmitMessage('Failed to send message. Please try again.');
       }
+    } catch (error) {
+      setSubmitMessage('An error occurred. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+      setTimeout(() => setSubmitMessage(''), 5000);
     }
   };
 
-  const item = {
-    hidden: { opacity: 0, y: 30 },
-    show: {
-      opacity: 1,
-      y: 0,
-      transition: {
-        type: "spring",
-        stiffness: 100,
-        damping: 10
-      }
+  // Skills data - using chip style
+  const skills = [
+    'React.js', 'Next.js', 'Node.js', 'Express', 'MongoDB',
+    'TypeScript', 'JavaScript', 'HTML5', 'CSS3', 'Tailwind CSS',
+    'Redux', 'GraphQL', 'REST API', 'AWS', 'Docker',
+    'Git', 'GitHub', 'CI/CD', 'Jest', 'Cypress'
+  ];
+
+  // Work experience data
+  const experiences = [
+    {
+      role: 'Senior Software Engineer',
+      company: 'Tech Solutions Inc.',
+      duration: '2020 - Present',
+      description: 'Led a team of developers to build scalable web applications using React and Node.js. Implemented CI/CD pipelines reducing deployment time by 40%.'
+    },
+    {
+      role: 'Software Engineer',
+      company: 'Digital Innovations LLC',
+      duration: '2018 - 2020',
+      description: 'Developed and maintained e-commerce platforms. Optimized performance leading to 30% faster page loads.'
+    },
+    {
+      role: 'Junior Developer',
+      company: 'WebStart',
+      duration: '2016 - 2018',
+      description: 'Built responsive UIs and contributed to backend development. Learned modern web development practices.'
     }
+  ];
+
+  // Resume download function with options
+  const handleResumeAction = (type) => {
+    const link = document.createElement('a');
+    link.href = `/resume.${type}`;
+    link.download = `Ramesh_Upadhaya_Resume.${type}`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
-  // Mock images
-  const mockImages = {
-    project1: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80',
-    project2: 'https://images.unsplash.com/photo-1467232004584-a241de8bcf5d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1469&q=80',
-    project3: 'https://images.unsplash.com/photo-1499951360447-b19be8fe80f5?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80',
-  };
-
-  // Three.js animation setup
+  // Three.js animation setup (same as before)
   useEffect(() => {
     if (!canvasRef.current) return;
 
@@ -91,7 +153,7 @@ const Portfolio = () => {
     particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
 
     const loader = new THREE.TextureLoader();
-    const circleTexture = loader.load('/circle.png'); // See note below
+    const circleTexture = loader.load('/circle.png');
 
     const particlesMaterial = new THREE.PointsMaterial({
       size: 0.05,
@@ -132,21 +194,29 @@ const Portfolio = () => {
       window.removeEventListener('resize', handleResize);
     };
   }, []);
+  const [projects, setProjects] = useState([]);
 
-  // Resume download function
-  const downloadResume = () => {
-    const link = document.createElement('a');
-    link.href = '/resume.pdf';
-    link.download = 'Ramesh_Upadhaya_Resume.pdf';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
+  useEffect(() => {
+    const projectsRef = ref(database, 'projects');
+    const unsubscribe = onValue(projectsRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        const loadedProjects = Object.entries(data).map(([id, value]) => ({
+          id,
+          ...value
+        }));
+        setProjects(loadedProjects);
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   return (
     <>
       <Head>
-        <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+        <title>Ramesh Upadhaya - Senior Software Engineer</title>
+        <link href="https://fonts.googleapis.com/css2?family=Funnel+Display:wght@300..800&family=Outfit:wght@100..900&display=swap" rel="stylesheet" />
       </Head>
 
       <div className="min-h-screen bg-white text-gray-900 font-montserrat antialiased">
@@ -164,13 +234,9 @@ const Portfolio = () => {
           className="fixed w-full z-50 bg-white/90 backdrop-blur-md border-b border-gray-100"
         >
           <div className="container mx-auto px-6 py-5 flex justify-between items-center">
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              className="text-2xl font-bold tracking-tighter text-black cursor-pointer"
-              onClick={() => scrollToSection(homeRef)}
-            >
-              Ramesh Upadhaya
-            </motion.div>
+            <div className='cursor-pointer' onClick={() => scrollToSection(homeRef)}>
+              <img src="/avatar.png" alt="Ramesh Avatar" className="w-24" />
+            </div>
 
             {/* Desktop Navigation */}
             <motion.ul className="hidden md:flex space-x-10">
@@ -178,6 +244,7 @@ const Portfolio = () => {
                 { name: 'Home', ref: homeRef },
                 { name: 'About', ref: aboutRef },
                 { name: 'Work', ref: workRef },
+                { name: 'Experience', ref: experienceRef },
                 { name: 'Contact', ref: contactRef }
               ].map((item, index) => (
                 <motion.li
@@ -223,6 +290,7 @@ const Portfolio = () => {
                 { name: 'Home', ref: homeRef },
                 { name: 'About', ref: aboutRef },
                 { name: 'Work', ref: workRef },
+                { name: 'Experience', ref: experienceRef },
                 { name: 'Contact', ref: contactRef }
               ].map((item, index) => (
                 <motion.li
@@ -245,123 +313,106 @@ const Portfolio = () => {
 
         {/* Hero Section */}
         <section ref={homeRef} className="min-h-screen flex items-center justify-center pt-24 pb-20 relative overflow-hidden">
-          <div className="container mx-auto px-6 flex flex-col items-center text-center relative z-10">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="text-sm uppercase tracking-widest text-gray-500 font-medium mb-4"
-            >
-              Senior Software Engineer
-            </motion.div>
-
-            <motion.h1
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-              className="text-6xl md:text-8xl font-bold leading-tight tracking-tighter mb-6"
-            >
-              RAMESH <span className="text-black">UPADHAYA</span>
-            </motion.h1>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.6 }}
-              className="max-w-2xl mx-auto"
-            >
-              <p className="text-xl md:text-2xl text-gray-600 font-light mb-8">
-                Crafting exceptional digital experiences with <span className="font-medium text-black">React, Node.js, and modern web technologies</span>
-              </p>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.8 }}
-              className="flex flex-wrap justify-center gap-4 mt-8"
-            >
-              <motion.button
-                whileHover={{ y: -3, scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => scrollToSection(workRef)}
-                className="px-8 py-3.5 bg-black text-white rounded-full font-medium text-sm uppercase tracking-wider shadow-lg hover:shadow-xl transition-all"
-              >
-                View My Work
-              </motion.button>
-
-              <motion.button
-                whileHover={{ y: -3, scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={downloadResume}
-                className="px-8 py-3.5 bg-white text-black border border-black rounded-full font-medium text-sm uppercase tracking-wider shadow-md hover:shadow-lg transition-all flex items-center gap-2"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                </svg>
-                Download Resume
-              </motion.button>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 1.2 }}
-              className="flex items-center justify-center space-x-6 pt-16"
-            >
-              <div className="text-xs uppercase tracking-widest text-gray-400 font-medium">Connect With Me</div>
-              <div className="flex space-x-4">
-                {['LinkedIn', 'GitHub', 'Twitter'].map((social, index) => (
-                  <motion.a
-                    key={social}
-                    href="#"
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 1.2 + index * 0.1 }}
-                    whileHover={{ y: -3 }}
-                    className="text-gray-500 hover:text-black transition-colors text-sm"
-                  >
-                    {social}
-                  </motion.a>
-                ))}
-              </div>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 1.5 }}
-              className="absolute bottom-10 left-1/2 transform -translate-x-1/2"
-            >
+          <div className="container mx-auto px-6 flex flex-col md:flex-row items-center text-center md:text-left relative z-10">
+            {/* Avatar Image */}
+            <div className="md:mr-12 mb-8 md:mb-0">
               <motion.div
-                animate={{ y: [0, 10, 0] }}
-                transition={{ duration: 2, repeat: Infinity }}
-                className="text-gray-400"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.5 }}
+                className="relative w-48 h-48 md:w-64 md:h-64 rounded-full bg-white overflow-hidden border-4 border-white shadow-xl mx-auto md:mx-0 flex items-center justify-center"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-                </svg>
+                <img src="/avatar.png" alt="Ramesh Avatar" className="w-40" />
               </motion.div>
-            </motion.div>
+            </div>
+
+            <div>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="text-sm uppercase tracking-widest text-gray-500 font-medium mb-4"
+              >
+                Senior Software Engineer
+              </motion.div>
+
+              <motion.h1
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+                className="text-6xl md:text-8xl font-bold leading-tight tracking-tighter mb-6"
+              >
+                RAMESH <span className="text-black">UPADHAYA</span>
+              </motion.h1>
+
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.6 }}
+                className="max-w-2xl mx-auto md:mx-0"
+              >
+                <p className="text-xl md:text-2xl text-gray-600 font-light mb-8">
+                  Crafting exceptional digital experiences with <span className="font-medium text-black">React, Node.js, and modern web technologies</span>
+                </p>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.8 }}
+                className="flex flex-wrap justify-center md:justify-start gap-4 mt-8"
+              >
+                <motion.button
+                  whileHover={{ y: -3, scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => scrollToSection(workRef)}
+                  className="px-8 py-3.5 bg-black text-white rounded-full font-medium text-sm uppercase tracking-wider shadow-lg hover:shadow-xl transition-all"
+                >
+                  View My Work
+                </motion.button>
+
+                <motion.button
+                  whileHover={{ y: -3, scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => scrollToSection(experienceRef)}
+                  className="px-8 py-3.5 bg-white text-black border border-black rounded-full font-medium text-sm uppercase tracking-wider shadow-md hover:shadow-lg transition-all flex items-center gap-2"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  View Resume
+                </motion.button>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 1.2 }}
+                className="flex items-center justify-center md:justify-start space-x-6 pt-16"
+              >
+                <div className="text-xs uppercase tracking-widest text-gray-400 font-medium">Connect With Me</div>
+                <div className="flex space-x-4">
+                  {['LinkedIn', 'GitHub', 'Twitter'].map((social, index) => (
+                    <motion.a
+                      key={social}
+                      href="#"
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 1.2 + index * 0.1 }}
+                      whileHover={{ y: -3 }}
+                      className="text-gray-500 hover:text-black transition-colors text-sm"
+                    >
+                      {social}
+                    </motion.a>
+                  ))}
+                </div>
+              </motion.div>
+            </div>
           </div>
         </section>
 
         {/* About Section */}
         <section ref={aboutRef} className="py-28 bg-gray-50 relative overflow-hidden">
-          <motion.div
-            animate={{
-              x: [0, 100, 0],
-              y: [0, -50, 0],
-              rotate: [0, 5, 0]
-            }}
-            transition={{
-              duration: 15,
-              repeat: Infinity,
-              ease: "easeInOut"
-            }}
-            className="absolute top-1/4 left-1/4 w-32 h-32 rounded-lg bg-gray-100 opacity-10"
-          />
-
           <div className="container mx-auto px-6 relative">
             <motion.div
               initial={{ opacity: 0, y: 50 }}
@@ -397,36 +448,18 @@ const Portfolio = () => {
                 className="lg:w-1/2 mb-16 lg:mb-0 lg:pr-16 w-full"
               >
                 <h3 className="text-2xl font-semibold mb-6">My Skills</h3>
-                <div className="space-y-6">
-                  {[
-                    { skill: 'React.js / Next.js', level: 95 },
-                    { skill: 'Node.js / Express', level: 90 },
-                    { skill: 'MongoDB / Mongoose', level: 85 },
-                    { skill: 'RESTful APIs', level: 90 },
-                    { skill: 'TypeScript', level: 80 },
-                    { skill: 'AWS / DevOps', level: 75 }
-                  ].map((item, index) => (
+                <div className="flex flex-wrap gap-3">
+                  {skills.map((skill, index) => (
                     <motion.div
                       key={index}
                       initial={{ opacity: 0, y: 20 }}
                       whileInView={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.1 }}
+                      transition={{ delay: index * 0.05 }}
                       viewport={{ once: true }}
-                      className="space-y-2"
+                      whileHover={{ scale: 1.05 }}
+                      className="px-4 py-2 bg-white rounded-full shadow-sm border border-gray-200 text-sm font-medium"
                     >
-                      <div className="flex justify-between">
-                        <span className="text-gray-700 font-medium">{item.skill}</span>
-                        <span className="text-gray-500 text-sm">{item.level}%</span>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2">
-                        <motion.div
-                          initial={{ width: 0 }}
-                          whileInView={{ width: `${item.level}%` }}
-                          transition={{ duration: 1, delay: index * 0.1 }}
-                          viewport={{ once: true }}
-                          className="h-full rounded-full bg-black"
-                        />
-                      </div>
+                      {skill}
                     </motion.div>
                   ))}
                 </div>
@@ -443,7 +476,7 @@ const Portfolio = () => {
                   whileHover={{ x: 5 }}
                   className="text-gray-600 mb-6 leading-relaxed"
                 >
-                  As a seasoned MERN stack developer with 6+ years of experience, I&apos;ve architected and delivered over 30 web applications for clients across various industries. My expertise spans the entire development lifecycle - from conceptualization to deployment.
+                  As a seasoned MERN stack developer with 6+ years of experience, I've architected and delivered over 30 web applications for clients across various industries. My expertise spans the entire development lifecycle - from conceptualization to deployment.
                 </motion.p>
                 <motion.p
                   whileHover={{ x: 5 }}
@@ -477,8 +510,7 @@ const Portfolio = () => {
           </div>
         </section>
 
-        {/* Projects Section */}
-        <section ref={workRef} className="lg:py-28 relative pb-28 pt-16">
+        <section ref={workRef} className="py-28 relative">
           <div className="container mx-auto px-6">
             <motion.div
               initial={{ opacity: 0, y: 50 }}
@@ -505,36 +537,14 @@ const Portfolio = () => {
               />
             </motion.div>
 
-            <motion.div
-              variants={container}
-              initial="hidden"
-              whileInView="show"
-              viewport={{ once: true }}
-              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
-            >
-              {[
-                {
-                  title: 'E-commerce Platform',
-                  description: 'Full-featured online store with cart, payment integration, and admin dashboard.',
-                  tags: ['React', 'Node.js', 'MongoDB', 'Stripe'],
-                  image: mockImages.project1
-                },
-                {
-                  title: 'Project Management Tool',
-                  description: 'Collaborative platform with real-time updates and task management.',
-                  tags: ['Next.js', 'TypeScript', 'Firebase'],
-                  image: mockImages.project2
-                },
-                {
-                  title: 'Healthcare Analytics Dashboard',
-                  description: 'Data visualization platform for healthcare metrics and reporting.',
-                  tags: ['React', 'D3.js', 'Express', 'MongoDB'],
-                  image: mockImages.project3
-                },
-              ].map((project, index) => (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {projects.slice(0,3).map((project, index) => (
                 <motion.div
                   key={index}
-                  variants={item}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  viewport={{ once: true }}
                   whileHover={{ y: -10 }}
                   className="group relative overflow-hidden rounded-xl shadow-md hover:shadow-lg transition-all bg-white border border-gray-100"
                 >
@@ -559,7 +569,7 @@ const Portfolio = () => {
                   </div>
                 </motion.div>
               ))}
-            </motion.div>
+            </div>
 
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -568,12 +578,103 @@ const Portfolio = () => {
               viewport={{ once: true }}
               className="text-center mt-16"
             >
-              <button className="px-8 py-3.5 border border-gray-300 hover:border-black rounded-full font-medium text-sm uppercase tracking-wider transition-all flex items-center mx-auto space-x-2">
-                <span>View All Projects</span>
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                </svg>
-              </button>
+              <Link href="/projects">
+                <button className="px-8 py-3.5 border border-gray-300 hover:border-black rounded-full font-medium text-sm uppercase tracking-wider transition-all flex items-center mx-auto space-x-2">
+                  <span>View All Projects</span>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                  </svg>
+                </button>
+              </Link>
+
+            </motion.div>
+          </div>
+        </section>
+
+        <section ref={experienceRef} className="py-28 bg-gray-50 relative overflow-hidden">
+          <div className="container mx-auto px-6 relative">
+            <motion.div
+              initial={{ opacity: 0, y: 50 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              viewport={{ once: true }}
+              className="text-center mb-20"
+            >
+              <motion.div
+                whileHover={{ scale: 1.1 }}
+                className="text-sm uppercase tracking-widest text-gray-500 font-medium mb-4 inline-block"
+              >
+                My Journey
+              </motion.div>
+              <motion.h2
+                whileHover={{ scale: 1.02 }}
+                className="text-4xl font-bold mb-6"
+              >
+                Work Experience
+              </motion.h2>
+              <motion.div
+                whileHover={{ width: 100 }}
+                className="w-20 h-0.5 bg-black mx-auto"
+              />
+            </motion.div>
+
+            <div className="max-w-3xl mx-auto space-y-8">
+              {experiences.map((exp, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  viewport={{ once: true }}
+                  className="bg-white p-8 rounded-xl shadow-sm border border-gray-200 hover:border-black transition-all"
+                >
+                  <div className="flex justify-between items-start mb-4">
+                    <h3 className="text-xl font-bold">{exp.role}</h3>
+                    <span className="text-gray-500 text-sm">{exp.duration}</span>
+                  </div>
+                  <h4 className="text-lg font-medium text-gray-700 mb-4">{exp.company}</h4>
+                  <p className="text-gray-600">{exp.description}</p>
+                </motion.div>
+              ))}
+            </div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+              viewport={{ once: true }}
+              className="text-center mt-16"
+            >
+              <div className="inline-block relative group">
+                <button
+                  className="px-8 py-3.5 bg-black text-white rounded-full font-medium text-sm uppercase tracking-wider shadow-lg hover:shadow-xl transition-all flex items-center mx-auto space-x-2"
+                  onClick={() => {
+                    window.open('/resume.pdf', '_blank');
+                  }}
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  <span>View Full Resume</span>
+                </button>
+
+                <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                  <div className="py-1">
+                    <button
+                      onClick={() => handleResumeAction('pdf')}
+                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    >
+                      Download as PDF
+                    </button>
+                    <button
+                      onClick={() => handleResumeAction('docx')}
+                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    >
+                      Download as Word
+                    </button>
+                  </div>
+                </div>
+              </div>
             </motion.div>
           </div>
         </section>
@@ -598,7 +699,7 @@ const Portfolio = () => {
                 whileHover={{ scale: 1.02 }}
                 className="text-4xl font-bold mb-6"
               >
-                Let&apos;s Build Something
+                Let's Build Something
               </motion.h2>
               <motion.div
                 whileHover={{ width: 100 }}
@@ -610,19 +711,27 @@ const Portfolio = () => {
               whileHover={{ y: -5 }}
               className="max-w-3xl mx-auto bg-white p-8 rounded-xl shadow-sm border border-gray-100"
             >
-              <motion.form
-                initial={{ opacity: 0, scale: 0.95 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.6 }}
-                viewport={{ once: true }}
-                className="space-y-8"
-              >
+              {submitMessage && (
+                <motion.div
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className={`mb-6 p-4 rounded-md ${submitMessage.includes('success') ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}
+                >
+                  {submitMessage}
+                </motion.div>
+              )}
+
+              <form onSubmit={handleSubmit} className="space-y-8">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div>
                     <label htmlFor="name" className="block text-gray-700 mb-3 text-sm uppercase tracking-widest">Name</label>
                     <input
                       type="text"
                       id="name"
+                      name="name"
+                      value={formData.name}
+                      onChange={handleInputChange}
+                      required
                       className="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent placeholder-gray-400 transition-all"
                       placeholder="Your name"
                     />
@@ -632,6 +741,10 @@ const Portfolio = () => {
                     <input
                       type="email"
                       id="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleInputChange}
+                      required
                       className="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent placeholder-gray-400 transition-all"
                       placeholder="Your email"
                     />
@@ -642,6 +755,10 @@ const Portfolio = () => {
                   <input
                     type="text"
                     id="subject"
+                    name="subject"
+                    value={formData.subject}
+                    onChange={handleInputChange}
+                    required
                     className="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent placeholder-gray-400 transition-all"
                     placeholder="Subject"
                   />
@@ -650,7 +767,11 @@ const Portfolio = () => {
                   <label htmlFor="message" className="block text-gray-700 mb-3 text-sm uppercase tracking-widest">Message</label>
                   <textarea
                     id="message"
+                    name="message"
                     rows="5"
+                    value={formData.message}
+                    onChange={handleInputChange}
+                    required
                     className="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent placeholder-gray-400 transition-all"
                     placeholder="Your message"
                   />
@@ -659,11 +780,20 @@ const Portfolio = () => {
                   whileHover={{ y: -2, scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   type="submit"
-                  className="w-full px-8 py-5 bg-black text-white rounded-lg font-medium text-sm uppercase tracking-wider shadow-lg hover:shadow-xl transition-all"
+                  disabled={isSubmitting}
+                  className="w-full px-8 py-5 bg-black text-white rounded-lg font-medium text-sm uppercase tracking-wider shadow-lg hover:shadow-xl transition-all flex items-center justify-center"
                 >
-                  Send Message
+                  {isSubmitting ? (
+                    <>
+                      <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Sending...
+                    </>
+                  ) : 'Send Message'}
                 </motion.button>
-              </motion.form>
+              </form>
             </motion.div>
           </div>
         </section>
