@@ -476,7 +476,7 @@ const Portfolio = () => {
                   whileHover={{ x: 5 }}
                   className="text-gray-600 mb-6 leading-relaxed"
                 >
-                  As a seasoned MERN stack developer with 6+ years of experience, I've architected and delivered over 30 web applications for clients across various industries. My expertise spans the entire development lifecycle - from conceptualization to deployment.
+                  As a seasoned MERN stack developer with 6+ years of experience, I&apos;ve architected and delivered over 30 web applications for clients across various industries. My expertise spans the entire development lifecycle - from conceptualization to deployment.
                 </motion.p>
                 <motion.p
                   whileHover={{ x: 5 }}
@@ -699,7 +699,7 @@ const Portfolio = () => {
                 whileHover={{ scale: 1.02 }}
                 className="text-4xl font-bold mb-6"
               >
-                Let's Build Something
+                Let&apos;s Build Something
               </motion.h2>
               <motion.div
                 whileHover={{ width: 100 }}
