@@ -194,8 +194,8 @@ const Portfolio = () => {
                   <div className="absolute top-1/3 right-1/3 w-40 h-28 bg-white dark:bg-gray-800 shadow-lg rounded-lg rotate-12 flex items-center justify-center">
                     <div className="text-xs font-mono text-center">
                       <span className="text-indigo-600 dark:text-indigo-400">const</span> dev = {'{'}
-                      <div className="pl-4">skills: "full-stack",</div>
-                      <div className="pl-4">experience: "6+ years"</div>
+                      <div className="pl-4">skills: &quot;full-stack&quot;,</div>
+                      <div className="pl-4">experience: &quot;6+ years&quot;</div>
                       {'}'}
                     </div>
                   </div>
