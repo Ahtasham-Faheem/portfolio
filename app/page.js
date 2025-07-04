@@ -32,7 +32,7 @@ const Portfolio = () => {
             (function() {
                 const savedTheme = localStorage.getItem('theme');
                 const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-                const initialTheme = savedTheme || (systemPrefersDark ? 'dark' : 'light');
+                const initialTheme = savedTheme || (systemPrefersDark ? 'light' : 'light');
                 document.documentElement.classList.add(initialTheme);
             })();
         `
@@ -113,7 +113,7 @@ const Portfolio = () => {
 
         {/* Banner Section with Design Element */}
         <section className="min-h-screen pt-24 pb-12 flex items-center">
-          <div className="container mx-auto px-12">
+          <div className="container mx-auto px-6 md:px-12">
             <div className="grid md:grid-cols-2 gap-12 items-center">
               {/* Left Column - Content */}
               <div className="space-y-8">
