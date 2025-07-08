@@ -29,7 +29,6 @@ export default function ProtectedAdmin() {
   const handleLogin = (e) => {
     e.preventDefault();
     setError('');
-    console.log("xonsole", ADMIN_CREDENTIALS.email, ADMIN_CREDENTIALS.password)
     if (
       credentials.email === ADMIN_CREDENTIALS.email &&
       credentials.password === ADMIN_CREDENTIALS.password
