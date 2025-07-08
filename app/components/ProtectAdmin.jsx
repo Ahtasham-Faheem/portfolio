@@ -4,8 +4,8 @@ import { useRouter } from 'next/navigation';
 import AdminDashboard from './admin/page';
 
 const ADMIN_CREDENTIALS = {
-  email: process.env.ADMIN_EMAIL,
-  password: process.env.ADMIN_PASSWORD
+  email: process.env.NEXT_PUBLIC_ADMIN_EMAIL,
+  password: process.env.NEXT_PUBLIC_ADMIN_PASSWORD
 };
 
 export default function ProtectedAdmin() {
@@ -29,7 +29,7 @@ export default function ProtectedAdmin() {
   const handleLogin = (e) => {
     e.preventDefault();
     setError('');
-
+    console.log("xonsole", ADMIN_CREDENTIALS.email, ADMIN_CREDENTIALS.password)
     if (
       credentials.email === ADMIN_CREDENTIALS.email &&
       credentials.password === ADMIN_CREDENTIALS.password

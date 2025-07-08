@@ -333,7 +333,7 @@ const ProjectDetails = ({ params }) => {
                         viewport={{ once: true }}
                     >
                         <Link
-                            href="/#contact"
+                            href="/contact"
                             className="inline-block px-8 py-4 bg-white text-black rounded-lg font-medium text-lg hover:bg-gray-200 transition-colors"
                         >
                             Get in Touch
