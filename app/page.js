@@ -55,7 +55,7 @@ const Portfolio = () => {
           <div className="text-sm font-mono">
             {/* <div className="text-green-600 text-xs">// 6+ years experience</div> */}
             <div className="text-blue-600 mt-1">const developer</div>
-            <div className="text-purple-600">= "full-stack"</div>
+            <div className="text-purple-600">= &quot;full-stack&quot;</div>
             <div className="text-orange-600 mt-1">skills.length</div>
             <div className="text-red-600">{'>'} 15</div>
           </div>
