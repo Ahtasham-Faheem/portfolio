@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { database } from '../lib/firebase';
 import { ref, onValue } from 'firebase/database';
+import Header from '../components/Header';
 
 const About = () => {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -101,75 +102,7 @@ const About = () => {
             </Head>
             <div className={`min-h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-300`}>
                 {/* Header */}
-                <header className="fixed w-full z-50 bg-white/90 dark:bg-gray-900/90 border-b border-gray-100 dark:border-gray-800">
-                    <div className="container mx-auto px-4 py-3 flex justify-between items-center">
-                        <Link href="/" className="flex items-center group">
-                            <motion.div
-                                whileHover={{ x: -5 }}
-                                transition={{ duration: 0.3 }}
-                                className="flex items-center"
-                            >
-                                <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center mr-2">
-                                    <span className="text-sm font-medium text-white">RU</span>
-                                </div>
-                                <span className="text-lg font-medium">Ramesh Upadhaya</span>
-                            </motion.div>
-                        </Link>
-
-                        <nav className="hidden md:flex items-center space-x-8">
-                            <Link href="/about" className="text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
-                                About
-                            </Link>
-                            <Link href="/projects" className="text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
-                                Work
-                            </Link>
-                            <Link href="/contact" className="text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
-                                Contact
-                            </Link>
-                        </nav>
-
-                        <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="md:hidden px-3 py-1.5 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-base">
-                            ☰
-                        </button>
-                    </div>
-
-                    {/* Mobile Dropdown */}
-                    <AnimatePresence>
-                        {isMobileMenuOpen && (
-                            <motion.nav
-                                initial={{ height: 0, opacity: 0 }}
-                                animate={{ height: 'auto', opacity: 1 }}
-                                exit={{ height: 0, opacity: 0 }}
-                                transition={{ duration: 0.3 }}
-                                className="md:hidden bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800"
-                            >
-                                <div className="flex flex-col space-y-2 p-4">
-                                    <Link
-                                        href="/about"
-                                        className="text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors py-2"
-                                        onClick={() => setIsMobileMenuOpen(false)}
-                                    >
-                                        About
-                                    </Link>
-                                    <Link
-                                        href="/projects"
-                                        className="text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors py-2"
-                                        onClick={() => setIsMobileMenuOpen(false)}
-                                    >
-                                        Work
-                                    </Link>
-                                    <Link
-                                        href="/contact"
-                                        className="text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors py-2"
-                                        onClick={() => setIsMobileMenuOpen(false)}
-                                    >
-                                        Contact
-                                    </Link>
-                                </div>
-                            </motion.nav>
-                        )}
-                    </AnimatePresence>
-                </header>
+                <Header />
 
                 {/* Main Content */}
                 <div className="h-16"></div>
